@@ -8,11 +8,10 @@ android {
 
     signingConfigs {
         release {
-            rootProject.file("key_new.jks")
+            storeFile rootProject.file("key_new.jks")
             storePassword "123456"
             keyAlias "key0"
             keyPassword "123456"
-            storeFile file('C:\\Users\\stas\\AndroidStudioProjects\\LocationTrackRoute\\key_new.jks')
         }
     }
     buildTypes {
@@ -70,6 +69,11 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
     implementation 'com.yahoo.mobile.client.android.util.rangeseekbar:rangeseekbar-library:0.1.0'
+    implementation 'com.google.android.material:material:1.4.0'
+
+    //TimePicker
+    implementation 'com.github.tittojose:timerangepicker-library:0.2'
+    implementation 'com.github.PuffoCyano:Range-Time-Picker-Dialog:v1.8'
 
 
     implementation 'com.google.android.gms:play-services-location:18.0.0'
