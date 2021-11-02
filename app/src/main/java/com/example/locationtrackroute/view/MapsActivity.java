@@ -21,6 +21,8 @@ import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.TreeMap;
 
 import moxy.MvpAppCompatActivity;
 import moxy.presenter.InjectPresenter;
@@ -28,8 +30,9 @@ import moxy.presenter.InjectPresenter;
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
     private GoogleMap mMap;
     private static boolean firstCreate = true;
-    private ArrayList<LatLng> locationList;
-
+    private HashMap<String, LatLng> locationList;
+    private TreeMap<String,LatLng> locationSorted;
+   // private ArrayList<LatLng> locationList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,26 +59,37 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap = googleMap;
         LatLng kyiv = new LatLng(50.45, 30.55);
         mMap.addMarker(new MarkerOptions().position(kyiv).title("Marker in Kyiv"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(kyiv));
+        if (locationSorted!=null){
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(kyiv));
+          //  mMap.moveCamera(CameraUpdateFactory.newLatLng(locationList.get()));
+        }
+
+        else {
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(kyiv));
+        }
         mMap.animateCamera(CameraUpdateFactory.zoomTo(12));
 
-        PolylineOptions polylineOptions = new PolylineOptions()
-                .add(new LatLng(50.401166, 30.652036))
-                .add(new LatLng(50.395599, 30.616352))
-                .add(new LatLng(50.405010, 30.613777))
-                .add(new LatLng(50.410972, 30.637981))
-                .add(new LatLng(50.420434, 30.633604));
-        //if (locationList!=null) {
-          //  for (LatLng location : locationList) {
-           //     polylineOptions.add(location);
-          //  }
-        //}
+        PolylineOptions polylineOptions = new PolylineOptions();
+
+        if (locationSorted!=null) {
+
+            for (String key : locationSorted.keySet()) {
+
+                Log.v("Data", "Time " +  key + "  Location " + (locationSorted.get(key)) );
+               // mMap.addMarker(new MarkerOptions().position(locationSorted.get(key)));
+                polylineOptions.add(locationSorted.get(key));
+
+            }
+        }
         mMap.addPolyline(polylineOptions);
     }
 
     public void getCoordinatesList(){
         Bundle bundle = getIntent().getExtras();
-        locationList = bundle.getParcelableArrayList("LocationList");
+       // locationList= bundle.getParcelableArrayList("LocationList");
+
+        locationList = (HashMap<String, LatLng>)  getIntent().getSerializableExtra("LocationList");
+        locationSorted=new TreeMap<>(locationList);
             Log.v("Data","size" + locationList.size());
     }
 }

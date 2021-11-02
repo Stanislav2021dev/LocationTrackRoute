@@ -20,11 +20,13 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+
 import moxy.MvpPresenter;
 
 public class RoutePresenter extends MvpPresenter<LogInInterface> {
 
-    private final ArrayList<LatLng> locationList = new ArrayList<>();
+    private final HashMap<String,LatLng> locationList = new HashMap<>();
 
 
     public void start(String date,String timeStart, String timeEnd) {
@@ -49,18 +51,22 @@ public class RoutePresenter extends MvpPresenter<LogInInterface> {
                             Log.v("Data", "Success");
 
                             for (QueryDocumentSnapshot document : task.getResult()) {
-                                Log.v("Data", document.getId() + " => " + document.getData());
-                                locationList.add(toLatLng(document.getData().get("location").toString()));
+                                //Log.v("Data", document.getId() + " => " + document.getData());
+                             //   Log.v("Data", "Time " + document.getData().get("time"));
+
+                                locationList.put(document.getData().get("time").toString(),
+                                        toLatLng(document.getData().get("location").toString()));
                             }
 
                         }
                         else {
                             Log.v("Data", "Error getting documents: ", task.getException());
                         }
+                        Intent intent = new Intent(App.getContext(), MapsActivity.class);
+                        intent.putExtra("LocationList",locationList);
+                        App.getContext().startActivity(intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
 
-                        App.getContext().startActivity(new Intent(App.getContext(), MapsActivity.class)
-                                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        .putExtra("LocationList",locationList));
+
                     }
                 });
     }
