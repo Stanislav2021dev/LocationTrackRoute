@@ -6,6 +6,29 @@ android {
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
 
+    signingConfigs {
+        release {
+            storeFile file("C:\\Users\\stas\\Desktop\\KeyStore\\key_track_route.jks")
+            storePassword "123456"
+            keyAlias "track"
+            keyPassword "123456"
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+        }
+        debug {
+            signingConfig signingConfigs.release
+        }
+    }
+
+
+
+
+
+
+
     defaultConfig {
         applicationId "com.example.locationtrackroute"
         minSdkVersion 26
