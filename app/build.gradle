@@ -8,10 +8,11 @@ android {
 
     signingConfigs {
         release {
-            storeFile file("C:\\Users\\stas\\Desktop\\KeyStore\\key_track_route.jks")
+            rootProject.file("key_new.jks")
             storePassword "123456"
-            keyAlias "track"
+            keyAlias "key0"
             keyPassword "123456"
+            storeFile file('C:\\Users\\stas\\AndroidStudioProjects\\LocationTrackRoute\\key_new.jks')
         }
     }
     buildTypes {
