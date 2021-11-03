@@ -1,12 +1,17 @@
 package com.example.locationtrackroute.view;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.FragmentActivity;
 
 import android.app.DatePickerDialog;
 import android.app.FragmentManager;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.format.DateUtils;
 import android.util.Log;
@@ -23,12 +28,16 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.mcsoft.timerangepickerdialog.RangeTimePickerDialog;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -50,6 +59,7 @@ public class MapsActivity extends MvpAppCompatActivity implements OnMapReadyCall
     private GoogleMap mMap;
     private ActivityMapsBinding binding;
     private Calendar dateAndTime=Calendar.getInstance();
+    private Date chosenD;
     private DatePickerDialog.OnDateSetListener dateListener;
     private String currentDate;
     private String chosenDate;
@@ -58,6 +68,7 @@ public class MapsActivity extends MvpAppCompatActivity implements OnMapReadyCall
     private String chosenMinTime;
     private String chosenMaxTime;
     private Polyline polyline;
+    private String chosenDateView;
 
 
     @Override
@@ -72,6 +83,12 @@ public class MapsActivity extends MvpAppCompatActivity implements OnMapReadyCall
         Log.v("GetCoordinates","OnCreate");
         currentDate=new SimpleDateFormat("yyyyMMdd", Locale.US).format(new Date());
         routePresenter.start(currentDate,defaultMinTime,defaultMaxTime);
+        if (chosenDate==null){
+            binding.dateInfo.setText(new SimpleDateFormat("EEE, d MMMM",Locale.US).format(new Date()));
+        }
+        else {
+            binding.dateInfo.setText(chosenDateView);
+        }
 
         binding.calendarfab.setOnClickListener(v -> setDate(v));
         binding.timefab.setOnClickListener(v -> intitRangeTimeDialog());
@@ -80,7 +97,17 @@ public class MapsActivity extends MvpAppCompatActivity implements OnMapReadyCall
         dateListener= (view, year, monthOfYear, dayOfMonth) -> {
             chosenDate = String.format("%4d%02d%02d",year,monthOfYear+1,dayOfMonth);
 
-            if (chosenMinTime==null || chosenMaxTime ==null) {
+            SimpleDateFormat format = new SimpleDateFormat();
+            format.applyPattern("yyyyMMdd");
+            try {
+                chosenD= format.parse(chosenDate);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            chosenDateView = (new SimpleDateFormat("EEE, d MMMM",Locale.US).format(chosenD));
+            binding.dateInfo.setText(chosenDateView);
+
+        if (chosenMinTime==null || chosenMaxTime ==null) {
                 routePresenter.start(chosenDate,defaultMinTime,defaultMaxTime);
             }
             else {
@@ -147,21 +174,25 @@ public class MapsActivity extends MvpAppCompatActivity implements OnMapReadyCall
 
         Log.v("Data","size" + locationList.size());
         PolylineOptions polylineOptions = new PolylineOptions();
+        mMap.clear();
         if (polyline!=null){
             polyline.remove();
         }
 
-        if (locationList!=null && locationList.keySet().size()!=0) {
+        if (locationList!=null && locationList.keySet().size()>1) {
             for (String key : locationList.keySet()) {
-      //          Log.v("Data", "Time " + key + "  Location " + (locationSorted.get(key)));
-                polylineOptions.add(locationList.get(key));
-            }
 
-          polyline =  mMap.addPolyline(polylineOptions);
-          String firstKey = locationList.firstKey();
-          mMap.moveCamera(CameraUpdateFactory.newLatLng(locationList.get(firstKey)));
-          mMap.animateCamera(CameraUpdateFactory.zoomTo(14));
-            Log.v("key", "Key" + firstKey + "coord "+ locationList.get(firstKey));
+                polylineOptions.add(locationList.get(key));
+                polyline = mMap.addPolyline(polylineOptions);
+                String firstKey = locationList.firstKey();
+                String lastKey = locationList.lastKey();
+                setMarkers(locationList.get(firstKey), "Start");
+                setMarkers(locationList.get(lastKey),"Finish");
+
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(locationList.get(firstKey)));
+                mMap.animateCamera(CameraUpdateFactory.zoomTo(14));
+                Log.v("key", "Key" + firstKey + "coord " + locationList.get(firstKey));
+            }
         }
 
     }
@@ -170,5 +201,23 @@ public class MapsActivity extends MvpAppCompatActivity implements OnMapReadyCall
     public void makeToast(String toast) {
         Toast.makeText(MapsActivity.this, toast, Toast.LENGTH_LONG).show();
     }
+
+    public void setMarkers(LatLng location,String title){
+        mMap.addMarker(new MarkerOptions()
+                .position(location)
+                .title(title)
+                .icon(bitmapDescriptorFromVector(R.drawable.ic_square)));
+
+    }
+
+    private BitmapDescriptor bitmapDescriptorFromVector(int vectorResId) {
+        Drawable vectorDrawable = ContextCompat.getDrawable(this, vectorResId);
+        vectorDrawable.setBounds(0, 0, vectorDrawable.getIntrinsicWidth(), vectorDrawable.getIntrinsicHeight());
+        Bitmap bitmap = Bitmap.createBitmap(vectorDrawable.getIntrinsicWidth(), vectorDrawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        vectorDrawable.draw(canvas);
+        return BitmapDescriptorFactory.fromBitmap(bitmap);
+    }
+
 
 }
